@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	data, err := os.ReadFile("day1/example1.txt")
+	data, err := os.ReadFile("example1.txt")
 	if err != nil {
 		fmt.Println(err.Error())
 	}
