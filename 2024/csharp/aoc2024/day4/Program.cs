@@ -19,7 +19,6 @@ char[,] CreateMatrix() {
 int Day4Problem1() {
   var matrix = CreateMatrix();
   var count = 0;
-  const string searchWord = "XMAS";
   var rows = matrix.GetLength(0);
   var cols = matrix.GetLength(1);
   var directions = new[] {
@@ -32,12 +31,12 @@ int Day4Problem1() {
       if (matrix[y, x] != 'X') continue;
 
       foreach (var (dx, dy) in directions) {
-        var targetY = y + dy * (searchWord.Length - 1);
-        var targetX = x + dx * (searchWord.Length - 1);
+        var targetY = y + dy * 3;
+        var targetX = x + dx * 3;
 
         if (0 > targetY || targetY >= rows || 0 > targetX || targetX >= cols) continue;
-        var word = new StringBuilder(searchWord.Length);
-        for (var i = 0; i < searchWord.Length; i++) {
+        var word = new StringBuilder(4);
+        for (var i = 0; i < 4; i++) {
           var currentY = y + dy * i;
           var currentX = x + dx * i;
           word.Append(matrix[currentY, currentX]);
@@ -53,43 +52,58 @@ int Day4Problem1() {
 
 Console.WriteLine($"Day 4 Problem 1 Solution: {Day4Problem1()}");
 
-
-int Day4Problem2() {
+int Day4Problem2()
+{
   var matrix = CreateMatrix();
-  var count = 0;
-  const string searchWord = "MAS";
   var rows = matrix.GetLength(0);
   var cols = matrix.GetLength(1);
-  
-  for (var y = 0; y < rows; y++) {
-    for (var x = 0; x < cols; x++) {
-      if (matrix[y, x] != 'A') continue;
-      var topLeft = (y + -1, x + -1);
-      var bottomRight = (y + 1, x + 1);
+    
+  // Pre-define the diagonal directions for checking
+  var diagonalPairs = new[] {
+    ((y: -1, x: -1), (y: 1, x: 1)),   // top-left to bottom-right
+    ((y: 1, x: -1), (y: -1, x: 1))    // bottom-left to top-right
+  };
+    
+  var count = 0;
+  for (var y = 0; y < rows; y++)
+  for (var x = 0; x < cols; x++)
+  {
+    if (matrix[y, x] != 'A') continue;
 
-      var bottomLeft = (y + 1, x - 1);
-      var topRight = (y - 1, x + 1);
-      
-      if (!IsInBounds(topLeft) ||
-          !IsInBounds(topRight) ||
-          !IsInBounds(bottomLeft) ||
-          !IsInBounds(bottomRight)
-         ) continue;
-      
-      var word1 = $"{matrix[topLeft.Item1, topLeft.Item2]}{matrix[y, x]}{matrix[bottomRight.Item1, bottomRight.Item2]}";
-      var word2 = $"{matrix[bottomLeft.Item1, bottomLeft.Item2]}{matrix[y, x]}{matrix[topRight.Item1, topRight.Item2]}";
-      Console.WriteLine($"Word 1: {word1}, Word2: {word2}");
-
-      if (IsSearchWord(word1) && IsSearchWord(word2)) count++;
-    }
+    // Check if both diagonals form valid words
+    if (HasValidDiagonals(y, x)) count++;
   }
-
   return count;
 
-  bool IsInBounds((int, int) coordinate) => coordinate.Item1 >= 0 && coordinate.Item1 < rows && coordinate.Item2 >= 0 &&
-                                            coordinate.Item2 < cols;
-  
-  bool IsSearchWord(string word) => word is "MAS" or "SAM";
-} 
+  bool HasValidDiagonals(int centerY, int centerX)
+  {
+    foreach (var (start, end) in diagonalPairs)
+    {
+      var startPos = (y: centerY + start.y, x: centerX + start.x);
+      var endPos = (y: centerY + end.y, x: centerX + end.x);
+            
+      if (!IsInBounds(startPos.y, startPos.x) || !IsInBounds(endPos.y, endPos.x))
+        return false;
+    }
 
+    var word1 = GetDiagonalWord(centerY, centerX, diagonalPairs[0].Item1, diagonalPairs[0].Item2);
+    var word2 = GetDiagonalWord(centerY, centerX, diagonalPairs[1].Item1, diagonalPairs[1].Item2);
+        
+    return IsSearchWord(word1) && IsSearchWord(word2);
+  }
+
+  string GetDiagonalWord(int centerY, int centerX, (int y, int x) start, (int y, int x) end)
+  {
+    var startChar = matrix[centerY + start.y, centerX + start.x];
+    var centerChar = matrix[centerY, centerX];
+    var endChar = matrix[centerY + end.y, centerX + end.x];
+    return $"{startChar}{centerChar}{endChar}";
+  }
+
+  bool IsInBounds(int y, int x) => 
+    y >= 0 && y < rows && x >= 0 && x < cols;
+
+  bool IsSearchWord(string word) => 
+    word is "MAS" or "SAM";
+}
 Console.WriteLine($"Day 4 Problem 2 Solution: {Day4Problem2()}");
